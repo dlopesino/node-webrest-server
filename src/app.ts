@@ -8,7 +8,7 @@ import { AppRoutes } from './presentation/app.routes'
 function main() {
     const options = {
         port: envs.PORT,
-        routes: AppRoutes.routes,
+        routes: AppRoutes.routes, // Getter estático de nuestras rutas
         publicFolder: envs.PUBLIC_FOLDER,
     }
     const server = new Server(options)

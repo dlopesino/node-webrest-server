@@ -6,7 +6,7 @@ export class AppRoutes {
         const router = Router()
 
         /* 
-            * Este archivo sólo crecerá con base de rutas, api
+            * Este archivo se mostrarán las rutas base disponibles de nuestra aplicación, api
             - api/todos
             - api/users 
             - api/auth 

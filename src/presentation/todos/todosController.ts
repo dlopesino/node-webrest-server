@@ -1,28 +1,6 @@
 import { Request, Response } from 'express'
-
-interface Todo {
-    id: number
-    description: string
-    completedAt: Date | null
-}
-
-let todos: Todo[] = [
-    {
-        id: 1,
-        description: 'Recolectar la piedra del Alma',
-        completedAt: new Date(),
-    },
-    {
-        id: 2,
-        description: 'Recolectar la piedra del Tiempo',
-        completedAt: new Date(new Date().getTime() * 1.5),
-    },
-    {
-        id: 3,
-        description: 'Recolectar la piedra de la Realidad ',
-        completedAt: new Date(new Date().getTime() * 2),
-    },
-]
+import { prisma } from '../../data/postgres'
+import { CreateTodoDto, UpdateTodoDto } from '../../domain/dtos'
 
 export class TodosController {
     /* 
@@ -33,12 +11,14 @@ export class TodosController {
 
     constructor() {}
 
-    public getTodos = (req: Request, res: Response) => {
+    public getTodos = async (req: Request, res: Response) => {
+        const todos = await prisma.todo.findMany()
         return res.json(todos)
     }
 
-    public getTodoById = (req: Request, res: Response) => {
-        console.log(req.params)
+    public getTodoById = async (req: Request, res: Response) => {
+        // Extraemos el id de los query params
+        //* +id convierte a number
         const id = +req.params.id
 
         // Cuando nos envian parámetros en formato erróneo es común enviar status 400 Bad Request
@@ -47,8 +27,11 @@ export class TodosController {
                 .status(400)
                 .json({ error: 'ID argument must be a number' })
 
-        //* +id convierte a number
-        const todo = todos.find((todo) => todo.id === id)
+        const todo = await prisma.todo.findFirst({
+            where: {
+                id,
+            },
+        })
 
         if (todo) return res.json(todo)
 
@@ -56,67 +39,55 @@ export class TodosController {
     }
 
     // POST
-    public createTodo = (req: Request, res: Response) => {
-        const { description } = req.body
+    public createTodo = async (req: Request, res: Response) => {
 
-        if (!description) {
-            return res
-                .status(400)
-                .json({ error: 'Description property is required' })
-        }
+        const [error, createTodoDto] = CreateTodoDto.create(req.body)
 
-        const newTodo = {
-            id: new Date().getTime(),
-            completedAt: null,
-            description,
-        }
-        todos.push(newTodo)
+        if (error) return res.status(400).json({error})
 
-        res.status(201).json(newTodo)
+        /* 
+            * La exclamación es para indicarle al compilador qu esi tengo el objeto, ya he hecho la comprobación
+            * en el if anterior con el error, ya que mi objeto si no envia error, envía el DTO
+        */
+        const created = await prisma.todo.create({
+            data: createTodoDto!,
+        })
+        
+        res.status(201).json(created)
     }
 
     // PUT
-    public updateTodo = (req: Request, res: Response) => {
+    public updateTodo = async (req: Request, res: Response) => {
         const id = +req.params.id
 
-        // Cuando nos envian parámetros en formato erróneo es común enviar status 400 Bad Request
-        if (isNaN(id)) {
-            return res
-                .status(400)
-                .json({ error: 'ID argument must be a number' })
-        }
+        const [error, updateTodoDto ] = UpdateTodoDto.create({...req.body, id})
+
+        if (error) return res.status(400).json({error})
 
         // En javascript, cuando trabajamos con objetos, esos objetos pasan por referencia
-        const todo = todos.find((todo) => todo.id === id)
+        // const todo = todos.find((todo) => todo.id === id)
+        const todo = await prisma.todo.findFirst({
+            where: {
+                id,
+            },
+        })
+
         if (!todo) {
             return res
                 .status(404)
                 .json({ error: `Todo with Id ${id} not found` })
         }
 
-        const { description, completedAt } = req.body
-
-        // if (!description) {
-        //     return res
-        //         .status(400)
-        //         .json({ error: 'Description property is required' })
-        // }
-
-        //! OJO, referencia
-        // En javascript, no deberíamos actualizar directamente la referencia
-        // No deberíamos mutar la información
-        // todo.description = description
-
-        todo.description = description || todo.description
-        completedAt === 'null'
-            ? (todo.completedAt = null)
-            : (todo.completedAt = new Date(completedAt) || todo.completedAt)
-
-        return res.status(200).json({ todo })
+        const updated = await prisma.todo.update({
+            where: { id },
+            data: updateTodoDto!.values
+        })
+        
+        return res.status(200).json({ updated })
     }
 
     // DELETE
-    public deleteTodo = (req: Request, res: Response) => {
+    public deleteTodo = async (req: Request, res: Response) => {
         const id = +req.params.id
 
         if (isNaN(id)) {
@@ -125,20 +96,19 @@ export class TodosController {
                 .json({ error: 'ID argument must be a number' })
         }
 
-        const todo = todos.find((todo) => todo.id === id)
+        // const todo = todos.find((todo) => todo.id === id)
+        const todo = await prisma.todo.findFirst({
+            where: {
+                id,
+            },
+        })
         if (!todo) {
             return res
                 .status(404)
                 .json({ error: `Todo with Id ${id} not found` })
         }
-        /*
-         * Splice nos permite eliminar elementos de un array indicando el indice del elemento a remover
-         * como primer parámetro y el segundo parámetro el número de posiciones a eliminar
-         * incluyendo la actual, en este caso sólo eliminamos el que coincide con nuestro "todo"
-             todos.splice(todos.indexOf(todo), 1)
-         */
-        todos = todos.filter((todo) => todo.id !== id)
+        const deleted = await prisma.todo.delete({ where: { id } })
 
-        return res.status(200).json({ todos })
+        return res.status(200).json({ deleted })
     }
 }
