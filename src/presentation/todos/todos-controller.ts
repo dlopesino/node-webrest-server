@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { CreateTodoDto, UpdateTodoDto } from '../../domain/dtos';
 import { CreateTodo, DeleteTodo, GetTodo, GetTodos, TodoRepository, UpdateTodo } from '../../domain';
-import { handleHttpError, STATUS } from '../../common';
+import { handleHttpError, STATUS } from '../../domain/errors';
 
 export class TodosController {
     /* 
@@ -22,7 +22,7 @@ export class TodosController {
         
         new GetTodos(this.todoRepository)
         .execute()
-        .then(todos => res.json({todos}))
+        .then(todos => res.json(todos))
         .catch( error => handleHttpError(error, res));
     }
 
@@ -33,7 +33,7 @@ export class TodosController {
 
         new GetTodo(this.todoRepository)
             .execute(id)
-            .then(todo => res.json({todo}))
+            .then(todo => res.json(todo))
             .catch(error => handleHttpError(error, res));
     }
 
@@ -49,8 +49,9 @@ export class TodosController {
         */
         new CreateTodo(this.todoRepository)
             .execute(createTodoDto!)
-            .then(todo => res.status(STATUS.SUCCESS.CREATED).json({todo}))
+            .then(todo => res.status(STATUS.SUCCESS.CREATED).json(todo))
             .catch(error => handleHttpError(error, res))
+            // centralizamos la logica del control de errores
     }
 
     // PUT
@@ -61,7 +62,7 @@ export class TodosController {
 
         new UpdateTodo(this.todoRepository)
             .execute(updateTodoDto!)
-            .then(todo => res.status(STATUS.SUCCESS.OK).json({todo}))
+            .then(todo => res.status(STATUS.SUCCESS.OK).json(todo))
             .catch(error => handleHttpError(error, res));
     }
 
@@ -71,7 +72,7 @@ export class TodosController {
 
         new DeleteTodo(this.todoRepository)
             .execute(id)
-            .then(todo => res.status(STATUS.SUCCESS.OK).json({todo}))
+            .then(todo => res.status(STATUS.SUCCESS.OK).json(todo))
             .catch(error => handleHttpError(error, res));
     }
 }

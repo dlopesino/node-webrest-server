@@ -13,7 +13,7 @@ export class CreateTodoDto {
         // Primero validamos las properties
         const { description } = props;
 
-        if (!description) return ['Description property is required', undefined]
+        if (!description || description.length === 0) return ['Description property is required', undefined]
 
         return [undefined, new CreateTodoDto(description)];
     }

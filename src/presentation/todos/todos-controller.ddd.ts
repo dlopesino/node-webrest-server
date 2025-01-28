@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { CreateTodoDto, UpdateTodoDto } from '../../domain/dtos';
 import { TodoRepository } from '../../domain';
-import { handleHttpError, STATUS } from '../../common';
+import { handleHttpError, STATUS } from '../../domain/errors';
 
 export class TodosController {
     /* 

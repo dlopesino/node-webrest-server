@@ -8,7 +8,8 @@ interface Options {
 }
 
 export class Server {
-    private app: Application = express()
+    public readonly app: Application = express()
+    private serverListener?: any
     private readonly routes: Router
     private readonly port: number
     private readonly publicFolder: string
@@ -67,8 +68,13 @@ export class Server {
         })
 
         // El puerto siempre debe venir de una variable de entorno
-        this.app.listen(this.port, () => {
+        this.serverListener = this.app.listen(this.port, () => {
             console.log(`Server Running on port ${this.port}`)
         })
+
+    }
+
+    public close() {
+        this.serverListener?.close();
     }
 }

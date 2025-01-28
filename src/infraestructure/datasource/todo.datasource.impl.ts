@@ -1,6 +1,12 @@
-import { HttpError, STATUS } from '../../common';
 import { prisma } from '../../data/postgres';
-import { CreateTodoDto, TodoDatasource, TodoEntity, UpdateTodoDto } from '../../domain';
+import { 
+    CreateTodoDto,
+    TodoDatasource,
+    TodoEntity,
+    UpdateTodoDto,
+    HttpError,
+    STATUS
+} from '../../domain';
 
 export class TodoDatasourceImpl implements TodoDatasource {
 
