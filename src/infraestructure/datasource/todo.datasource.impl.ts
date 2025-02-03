@@ -8,7 +8,7 @@ import {
     STATUS
 } from '../../domain';
 
-export class TodoDatasourceImpl implements TodoDatasource {
+export class TodoDatasourceImpl extends TodoDatasource {
 
     async create(createTodoDto: CreateTodoDto): Promise<TodoEntity> {
         const created = await prisma.todo.create({
